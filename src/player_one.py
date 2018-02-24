@@ -143,18 +143,16 @@ class Player(BasePlayer):
         else:
             return None
 
-    # def is_interior(self, node, search_tree = None):
-    #     if search_tree is None:
-    #         search_tree = nx.bfs_tree(self.board, node)
+    def get_enemy_neighbor_sum(self, node):
+        neighbor_sum = 0
+        for neighbor in self.board.neighbors(node):
+            own_node = self.board.nodes[neighbor]['owner'] == self.player_num
+            blank_node = self.board.nodes[neighbor]['owner'] == None
 
-    #     for tree_node in search_tree.successors(node):
-    #         owner = self.board.nodes[tree_node]['owner']
-    #         if owner is None:
-    #             if not self.is_interior(tree_node, search_tree): return False
-    #         if owner is not self.player_num:
-    #             return False
+            if not (own_node or blank_node):
+                neighbor_sum += self.board.nodes[neighbor]['old_units']
 
-    #     return True
+        print("Node %d (%d)" % (node, neighbor_sum))
 
     def get_perimeter_nodes(self):
         self.perimeter_nodes = dict() #Reset perimeter
@@ -162,10 +160,25 @@ class Player(BasePlayer):
             if self.is_perimeter(node):
                 self.perimeter_nodes[node] = 0
 
+    def not_me(self,nodes):
+        return list(filter(lambda x:self.board.nodes[x]['owner'] != self.player_num,nodes))
+
+    def get_target(self):
+        perim_nodes = self.perimeter_nodes.keys()
+        perim_neighbors = []
+        for pn in perim_nodes:
+            perim_neighbors += self.board.neighbors(pn)
+        not_mine_perim_neighbors = self.not_me(perim_neighbors)
+        self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.not_me(self.board.neighbors(x))))
+
     """
     Called during the placement phase to request player moves
     """
     def player_place_units(self):
+        self.get_perimeter_nodes()
+        print(self.perimeter_nodes.keys())
+        self.get_target()
+        print(self.target_node)
 
         """
         Insert player logic here to determine where to place your units

@@ -13,6 +13,7 @@ class Player(BasePlayer):
         super().__init__(p_id)  #Initializes the super class. Do not modify!
 
         self.perimeter_nodes = dict()
+        # self.possible_attacks = dict()
 
         """
         Insert player-specific initialization code here
@@ -55,6 +56,7 @@ class Player(BasePlayer):
             if self.is_perimeter(node):
                 self.perimeter_nodes[node] = 0
 
+
     def get_recruit_diffs(self):
         recruit_diffs = dict()
         for node in self.perimeter_nodes:
@@ -68,6 +70,19 @@ class Player(BasePlayer):
         sorted_nodes = sorted(recruit_diffs.keys(),
                               key=lambda x: -recruit_diffs[x])
         return (recruit_diffs, sorted_nodes)
+
+    def not_me(nodes):
+        return list(filter(lambda x:self.board.nodes[x]['owner'] != self.player_num,nodes))
+
+    def set_target(self):
+        perim_nodes = self.perimeter_nodes.keys()
+        perim_neighbors = []
+        for pn in perim_nodes:
+            perim_neighbors += self.board.neighbors(pn)
+        not_mine_perim_neighbors = self.not_me(perim_neighbors)
+        self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.not_me(self.board.neighbors(x))))
+
+
 
     """
     Called at the start of every placement phase and movement phase.
