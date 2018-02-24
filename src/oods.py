@@ -136,43 +136,31 @@ class Player(BasePlayer):
 
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
 
-    """
-    Called during the move phase to request player moves
-    """
-    def player_move_units(self):
-        """
-        Insert player logic here to determine where to move your units
-        """
-
-        print(self.target_node)
-        print(self.attack_node)
-
-        #if self.board.nodes[self.target_node]['owner'] is None:
-
-        our_units = self.board.nodes[self.attack_node]['old_units']
-        their_units = self.board.nodes[self.target_node]['old_units']
+    def make_attacks(self, attack_node, target_node):
+        our_units = self.board.nodes[attack_node]['old_units']
+        their_units = self.board.nodes[target_node]['old_units']
 
         if (our_units > their_units + 1):
-            self.board.nodes[self.target_node]['owner'] = self.player_num
-            target_is_perimeter = self.is_perimeter(self.target_node)
-            attack_is_perimeter = self.is_perimeter(self.attack_node)
-            self.board.nodes[self.target_node]['owner'] = None
+            self.board.nodes[target_node]['owner'] = self.player_num
+            target_is_perimeter = self.is_perimeter(target_node)
+            attack_is_perimeter = self.is_perimeter(attack_node)
+            self.board.nodes[target_node]['owner'] = None
 
 
             if not target_is_perimeter:
                 print("Target is perimeter")
-                self.move_unit(self.attack_node, self.target_node,
+                self.move_unit(attack_node, target_node,
                           their_units + 1)
 
             elif not attack_is_perimeter:
                 print("Attack is perimeter")
-                self.move_unit(self.attack_node, self.target_node,
+                self.move_unit(attack_node, target_node,
                           our_units - 1)
 
             else:
                 print("Neither are perimeter")
-                target_enemies = self.get_enemy_neighbor_sum(self.target_node)
-                attack_enemies = self.get_enemy_neighbor_sum(self.attack_node)
+                target_enemies = self.get_enemy_neighbor_sum(target_node)
+                attack_enemies = self.get_enemy_neighbor_sum(attack_node)
                 total_enemies = target_enemies + attack_enemies
 
                 leftover_units = our_units - their_units - 2
@@ -185,7 +173,18 @@ class Player(BasePlayer):
                                             * leftover_units)
                 number_to_move = their_units + 1 + number_to_give
 
-                self.move_unit(self.attack_node, self.target_node,
+                self.move_unit(attack_node, target_node,
                           number_to_move)
+
+    """
+    Called during the move phase to request player moves
+    """
+    def player_move_units(self):
+        """
+        Insert player logic here to determine where to move your units
+        """
+
+        #if self.board.nodes[self.target_node]['owner'] is None:
+        self.make_attacks(self.attack_node, self.target_node)
 
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
