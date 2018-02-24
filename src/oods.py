@@ -1,6 +1,7 @@
 from base_player import BasePlayer
 import networkx as nx
 import math
+import random
 
 class Player(BasePlayer):
 
@@ -78,13 +79,27 @@ class Player(BasePlayer):
     def are_me(self,nodes):
         return list(filter(lambda x:self.board.nodes[x]['owner'] == self.player_num,nodes))
 
+    def calc_new_perimeter_nodes(self,new_node):
+        temp = self.board.nodes[new_node]['owner']
+        self.board.nodes[new_node]['owner'] = self.player_num
+        results = []
+        my_nodes = list(self.nodes.keys())
+        my_nodes.append(new_node)
+        for node in my_nodes:
+            if self.is_perimeter(node):
+                results.append(node)
+        self.board.nodes[new_node]['owner'] = temp
+        return results
+
+
     def set_target(self):
         perim_nodes = self.perimeter_nodes.keys()
         perim_neighbors = []
         for pn in perim_nodes:
             perim_neighbors += self.board.neighbors(pn)
         not_mine_perim_neighbors = self.not_me(perim_neighbors)
-        self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.not_me(self.board.neighbors(x))))
+        random.shuffle(not_mine_perim_neighbors)
+        self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.calc_new_perimeter_nodes(x)))
 
     def set_attack_node(self):
         target_neighbors = self.are_me(self.board.neighbors(self.target_node))
