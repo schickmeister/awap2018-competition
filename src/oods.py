@@ -71,8 +71,11 @@ class Player(BasePlayer):
                               key=lambda x: -recruit_diffs[x])
         return (recruit_diffs, sorted_nodes)
 
-    def not_me(nodes):
+    def not_me(self,nodes):
         return list(filter(lambda x:self.board.nodes[x]['owner'] != self.player_num,nodes))
+
+    def are_me(self,nodes):
+        return list(filter(lambda x:self.board.nodes[x]['owner'] == self.player_num,nodes))
 
     def set_target(self):
         perim_nodes = self.perimeter_nodes.keys()
@@ -82,7 +85,11 @@ class Player(BasePlayer):
         not_mine_perim_neighbors = self.not_me(perim_neighbors)
         self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.not_me(self.board.neighbors(x))))
 
-
+    def set_attack_node(self):
+        target_neighbors = self.are_me(self.board.neighbors(self.target_node))
+        mapped = map(lambda x: (x,self.board.nodes[x]['old_units']-self.get_enemy_neighbor_sum(x)),target_neighbors)
+        a_node,a_node_diff = max(mapped,key=lambda x:x[1])
+        self.attack_node = a_node
 
     """
     Called at the start of every placement phase and movement phase.
@@ -92,9 +99,6 @@ class Player(BasePlayer):
         """
         Insert any player-specific turn initialization code here
         """
-        self.set_perimeter_nodes()
-        print(list(self.perimeter_nodes.keys()))
-        print(self.get_perimeter_priority())
 
         return
 

@@ -151,8 +151,7 @@ class Player(BasePlayer):
 
             if not (own_node or blank_node):
                 neighbor_sum += self.board.nodes[neighbor]['old_units']
-
-        print("Node %d (%d)" % (node, neighbor_sum))
+        return neighbor_sum
 
     def get_perimeter_nodes(self):
         self.perimeter_nodes = dict() #Reset perimeter
@@ -163,7 +162,10 @@ class Player(BasePlayer):
     def not_me(self,nodes):
         return list(filter(lambda x:self.board.nodes[x]['owner'] != self.player_num,nodes))
 
-    def get_target(self):
+    def are_me(self,nodes):
+        return list(filter(lambda x:self.board.nodes[x]['owner'] == self.player_num,nodes))
+
+    def set_target(self):
         perim_nodes = self.perimeter_nodes.keys()
         perim_neighbors = []
         for pn in perim_nodes:
@@ -171,14 +173,22 @@ class Player(BasePlayer):
         not_mine_perim_neighbors = self.not_me(perim_neighbors)
         self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.not_me(self.board.neighbors(x))))
 
+    def set_attack_node(self):
+        target_neighbors = self.are_me(self.board.neighbors(self.target_node))
+        mapped = map(lambda x: (x,self.board.nodes[x]['old_units']-self.get_enemy_neighbor_sum(x)),target_neighbors)
+        a_node,a_node_diff = max(mapped,key=lambda x:x[1])
+        self.attack_node = a_node
+
     """
     Called during the placement phase to request player moves
     """
     def player_place_units(self):
         self.get_perimeter_nodes()
         print(self.perimeter_nodes.keys())
-        self.get_target()
+        self.set_target()
         print(self.target_node)
+        self.set_attack_node()
+        print(self.attack_node)
 
         """
         Insert player logic here to determine where to place your units
