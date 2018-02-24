@@ -35,6 +35,17 @@ class Player(BasePlayer):
 
         return True
 
+    def get_enemy_neighbor_sum(self, node):
+        neighbor_sum = 0
+        for neighbor in self.board.neighbors(node):
+            own_node = self.board.nodes[neighbor]['owner'] == self.player_num
+            blank_node = self.board.nodes[neighbor]['owner'] == None
+
+            if not (own_node or blank_node):
+                neighbor_sum += self.board.nodes[neighbor]['old_units']
+
+        print("Node %d (%d)" % (node, neighbor_sum))
+
     def get_perimeter_nodes(self):
         self.perimeter_nodes = dict() #Reset perimeter
         for node in self.nodes:

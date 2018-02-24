@@ -121,29 +121,6 @@ class Player(BasePlayer):
             return min_count
         return curr_enemy_count
 
-
-    def is_perimeter(self, node):
-        return not self.is_interior(node)
-
-    def is_interior(self, node, search_tree = None):
-        if search_tree is None:
-            search_tree = nx.bfs_tree(self.board, node)
-
-        for tree_node in search_tree.successors(node):
-            owner = self.board.nodes[tree_node]['owner']
-            if owner is None:
-                if not self.is_interior(tree_node, search_tree): return False
-            if owner is not self.player_num:
-                return False
-
-        return True
-
-    def get_perimeter_nodes(self):
-        self.perimeter_nodes = dict() #Reset perimeter
-        for node in self.nodes:
-            if self.is_perimeter(node):
-                self.perimeter_nodes[node] = 0
-
     """
     Called during the placement phase to request player moves
     """
@@ -151,9 +128,6 @@ class Player(BasePlayer):
         """
         Insert player logic here to determine where to place your units
         """
-
-        self.get_perimeter_nodes()
-        print(list(self.perimeter_nodes.keys()))
 
         for target in self.long_term_unit_counts:
             curr_enemy_count = self.get_enemy_units(target)
