@@ -63,6 +63,12 @@ class Player(BasePlayer):
             recruit_diffs[node] = neighbor_sum - current_units
         return recruit_diffs
 
+    def get_perimeter_priority(self):
+        recruit_diffs = self.get_recruit_diffs()
+        sorted_nodes = sorted(recruit_diffs.keys(),
+                              key=lambda x: -recruit_diffs[x])
+        return (recruit_diffs, sorted_nodes)
+
     """
     Called at the start of every placement phase and movement phase.
     """
@@ -74,7 +80,7 @@ class Player(BasePlayer):
 
         self.set_perimeter_nodes()
         print(list(self.perimeter_nodes.keys()))
-        print(self.get_recruit_diffs())
+        print(self.get_perimeter_priority())
         return
 
 
