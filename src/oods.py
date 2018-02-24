@@ -72,8 +72,11 @@ class Player(BasePlayer):
                               key=lambda x: -recruit_diffs[x])
         return (recruit_diffs, sorted_nodes)
 
-    def not_me(nodes):
+    def not_me(self,nodes):
         return list(filter(lambda x:self.board.nodes[x]['owner'] != self.player_num,nodes))
+
+    def are_me(self,nodes):
+        return list(filter(lambda x:self.board.nodes[x]['owner'] == self.player_num,nodes))
 
     def set_target(self):
         perim_nodes = self.perimeter_nodes.keys()
@@ -83,7 +86,11 @@ class Player(BasePlayer):
         not_mine_perim_neighbors = self.not_me(perim_neighbors)
         self.target_node = min(not_mine_perim_neighbors,key=lambda x:len(self.not_me(self.board.neighbors(x))))
 
-
+    def set_attack_node(self):
+        target_neighbors = self.are_me(self.board.neighbors(self.target_node))
+        mapped = map(lambda x: (x,self.board.nodes[x]['old_units']-self.get_enemy_neighbor_sum(x)),target_neighbors)
+        a_node,a_node_diff = max(mapped,key=lambda x:x[1])
+        self.attack_node = a_node
 
     """
     Called at the start of every placement phase and movement phase.
@@ -102,6 +109,9 @@ class Player(BasePlayer):
     """
     def player_place_units(self):
         self.set_perimeter_nodes()
+        self.set_target()
+        self.set_attack_node()
+
         recruit_diffs, sorted_nodes = self.get_perimeter_priority()
 
         nodes_to_fill = list(filter(lambda x: recruit_diffs[x] >= 0,
@@ -140,26 +150,29 @@ class Player(BasePlayer):
                 self.board.nodes[self.target_node]['owner'] = self.player_num
 
                 if not self.is_perimeter(self.target_node):
-                    self.move(self.attack_node, self.target_node,
+                    self.move_unit(self.attack_node, self.target_node,
                               their_units + 1)
 
                 elif not self.is_perimeter(self.attack_node):
-                    self.move(self.attack_node, self.target_node,
+                    self.move_unit(self.attack_node, self.target_node,
                               our_units - 1)
 
                 else:
-                    target_enemies = get_enemy_neighbor_sum(self.target_node)
-                    attack_enemies = get_enemy_neigbor_sum(self.attack_node)
+                    target_enemies = self.get_enemy_neighbor_sum(self.target_node)
+                    attack_enemies = self.get_enemy_neighbor_sum(self.attack_node)
                     total_enemies = target_enemies + attack_enemies
 
                     leftover_units = our_units - their_units - 2
-                    fraction_to_give = target_enemies / total_enemies
+                    if (total_enemies != 0):
+                        fraction_to_give = target_enemies / total_enemies
+                    else:
+                        fraction_to_give = 0.5
 
                     number_to_give = math.floor(fraction_to_give
                                                 * leftover_units)
                     number_to_move = their_units + 1 + number_to_give
 
-                    self.move(self.attack_node, self.target_node,
+                    self.move_unit(self.attack_node, self.target_node,
                               number_to_move)
 
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
