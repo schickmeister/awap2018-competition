@@ -121,10 +121,52 @@ class Player(BasePlayer):
             return min_count
         return curr_enemy_count
 
+    # def is_perimeter(self, node):
+    #     return not self.is_interior(node)
+
+    def is_perimeter(self,node):
+        return self.search_enemy(node,nx.bfs_tree(self.board,node)) != None
+
+    def search_enemy(self,node,search_tree):
+        results = []
+        for tnode in search_tree.successors(node):
+            owner = self.board.nodes[tnode]['owner']
+            if owner == self.player_num:
+                continue
+            elif owner == None:
+                results.append(self.search_enemy(tnode,search_tree))
+            else:
+                return tnode
+        L = list(filter(lambda x:x != None,results))
+        if L != []:
+            return L[0]
+        else:
+            return None
+
+    # def is_interior(self, node, search_tree = None):
+    #     if search_tree is None:
+    #         search_tree = nx.bfs_tree(self.board, node)
+
+    #     for tree_node in search_tree.successors(node):
+    #         owner = self.board.nodes[tree_node]['owner']
+    #         if owner is None:
+    #             if not self.is_interior(tree_node, search_tree): return False
+    #         if owner is not self.player_num:
+    #             return False
+
+    #     return True
+
+    def get_perimeter_nodes(self):
+        self.perimeter_nodes = dict() #Reset perimeter
+        for node in self.nodes:
+            if self.is_perimeter(node):
+                self.perimeter_nodes[node] = 0
+
     """
     Called during the placement phase to request player moves
     """
     def player_place_units(self):
+
         """
         Insert player logic here to determine where to place your units
         """
