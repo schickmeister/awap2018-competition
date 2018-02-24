@@ -47,13 +47,21 @@ class Player(BasePlayer):
             if not (own_node or blank_node):
                 neighbor_sum += self.board.nodes[neighbor]['old_units']
 
-        print("Node %d (%d)" % (node, neighbor_sum))
+        return neighbor_sum
 
-    def get_perimeter_nodes(self):
+    def set_perimeter_nodes(self):
         self.perimeter_nodes = dict() #Reset perimeter
         for node in self.nodes:
             if self.is_perimeter(node):
                 self.perimeter_nodes[node] = 0
+
+    def get_recruit_diffs(self):
+        recruit_diffs = dict()
+        for node in self.perimeter_nodes:
+            current_units = self.board.nodes[node]['old_units']
+            neighbor_sum = self.get_enemy_neighbor_sum(node)
+            recruit_diffs[node] = neighbor_sum - current_units
+        return recruit_diffs
 
     """
     Called at the start of every placement phase and movement phase.
@@ -64,8 +72,9 @@ class Player(BasePlayer):
         Insert any player-specific turn initialization code here
         """
 
-        self.get_perimeter_nodes()
+        self.set_perimeter_nodes()
         print(list(self.perimeter_nodes.keys()))
+        print(self.get_recruit_diffs())
         return
 
 
@@ -73,7 +82,6 @@ class Player(BasePlayer):
     Called during the placement phase to request player moves
     """
     def player_place_units(self):
-        self.get_perimeter_nodes()
         """
         Insert player logic here to determine where to place your units
         """
