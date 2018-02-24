@@ -1,6 +1,7 @@
 from base_player import BasePlayer
 import networkx as nx
 import math
+import random
 
 class Player(BasePlayer):
 
@@ -79,6 +80,7 @@ class Player(BasePlayer):
         return list(filter(lambda x:self.board.nodes[x]['owner'] == self.player_num,nodes))
 
     def set_target(self):
+        #TODO: Don't break when we frickin wreck everybody else
         perim_nodes = self.perimeter_nodes.keys()
         perim_neighbors = []
         for pn in perim_nodes:
@@ -142,37 +144,48 @@ class Player(BasePlayer):
         Insert player logic here to determine where to move your units
         """
 
-        if self.board.nodes[self.target_node]['owner'] is None:
-            our_units = self.board.nodes[self.attack_node]['old_units']
-            their_units = self.board.nodes[self.target_node]['old_units']
+        print(self.target_node)
+        print(self.attack_node)
 
-            if (our_units > their_units):
-                self.board.nodes[self.target_node]['owner'] = self.player_num
+        #if self.board.nodes[self.target_node]['owner'] is None:
 
-                if not self.is_perimeter(self.target_node):
-                    self.move_unit(self.attack_node, self.target_node,
-                              their_units + 1)
+        our_units = self.board.nodes[self.attack_node]['old_units']
+        their_units = self.board.nodes[self.target_node]['old_units']
 
-                elif not self.is_perimeter(self.attack_node):
-                    self.move_unit(self.attack_node, self.target_node,
-                              our_units - 1)
+        if (our_units > their_units + 1):
+            self.board.nodes[self.target_node]['owner'] = self.player_num
+            target_is_perimeter = self.is_perimeter(self.target_node)
+            attack_is_perimeter = self.is_perimeter(self.attack_node)
+            self.board.nodes[self.target_node]['owner'] = None
 
+
+            if not target_is_perimeter:
+                print("Target is perimeter")
+                self.move_unit(self.attack_node, self.target_node,
+                          their_units + 1)
+
+            elif not attack_is_perimeter:
+                print("Attack is perimeter")
+                self.move_unit(self.attack_node, self.target_node,
+                          our_units - 1)
+
+            else:
+                print("Neither are perimeter")
+                target_enemies = self.get_enemy_neighbor_sum(self.target_node)
+                attack_enemies = self.get_enemy_neighbor_sum(self.attack_node)
+                total_enemies = target_enemies + attack_enemies
+
+                leftover_units = our_units - their_units - 2
+                if (total_enemies != 0):
+                    fraction_to_give = target_enemies / total_enemies
                 else:
-                    target_enemies = self.get_enemy_neighbor_sum(self.target_node)
-                    attack_enemies = self.get_enemy_neighbor_sum(self.attack_node)
-                    total_enemies = target_enemies + attack_enemies
+                    fraction_to_give = 0.5
 
-                    leftover_units = our_units - their_units - 2
-                    if (total_enemies != 0):
-                        fraction_to_give = target_enemies / total_enemies
-                    else:
-                        fraction_to_give = 0.5
+                number_to_give = math.floor(fraction_to_give
+                                            * leftover_units)
+                number_to_move = their_units + 1 + number_to_give
 
-                    number_to_give = math.floor(fraction_to_give
-                                                * leftover_units)
-                    number_to_move = their_units + 1 + number_to_give
-
-                    self.move_unit(self.attack_node, self.target_node,
-                              number_to_move)
+                self.move_unit(self.attack_node, self.target_node,
+                          number_to_move)
 
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
