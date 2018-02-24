@@ -148,17 +148,14 @@ class Player(BasePlayer):
 
 
             if not target_is_perimeter:
-                print("Target is perimeter")
                 self.move_unit(attack_node, target_node,
                           their_units + 1)
 
             elif not attack_is_perimeter:
-                print("Attack is perimeter")
                 self.move_unit(attack_node, target_node,
                           our_units - 1)
 
             else:
-                print("Neither are perimeter")
                 target_enemies = self.get_enemy_neighbor_sum(target_node)
                 attack_enemies = self.get_enemy_neighbor_sum(attack_node)
                 total_enemies = target_enemies + attack_enemies
@@ -185,6 +182,11 @@ class Player(BasePlayer):
         """
 
         #if self.board.nodes[self.target_node]['owner'] is None:
+
         self.make_attacks(self.attack_node, self.target_node)
+        for node in self.perimeter_nodes:
+            for neighbor in self.board.neighbors(node):
+                if self.board.nodes[neighbor]['owner'] != self.player_num:
+                    self.make_attacks(node, neighbor)
 
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
