@@ -74,7 +74,7 @@ class Player(BasePlayer):
     def not_me(nodes):
         return list(filter(lambda x:self.board.nodes[x]['owner'] != self.player_num,nodes))
 
-    def get_target(self):
+    def set_target(self):
         perim_nodes = self.perimeter_nodes.keys()
         perim_neighbors = []
         for pn in perim_nodes:
@@ -92,14 +92,10 @@ class Player(BasePlayer):
         """
         Insert any player-specific turn initialization code here
         """
-
-<<<<<<< HEAD
         self.set_perimeter_nodes()
         print(list(self.perimeter_nodes.keys()))
         print(self.get_perimeter_priority())
-=======
-        self.get_perimeter_nodes()
->>>>>>> jeremy
+
         return
 
 
