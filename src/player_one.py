@@ -9,7 +9,7 @@ class Player(BasePlayer):
 
     """
     You will implement this class for the competition.
-    You can add any additional variables / methods in this file. 
+    You can add any additional variables / methods in this file.
     Do not modify the class name or the base class and do not modify the lines marked below.
     """
 
@@ -19,7 +19,7 @@ class Player(BasePlayer):
         """
         Insert player-specific initialization code here
         """
-        self.long_term_attack_targets = set() 
+        self.long_term_attack_targets = set()
         self.long_term_protect_targets = set()
         self.long_term_unit_counts = dict() #Contains (prev_enemy_count, curr_enemy_count)
         self.long_term_movements = dict() # Contains list of nodes to move to
@@ -122,6 +122,27 @@ class Player(BasePlayer):
         return curr_enemy_count
 
 
+    def is_perimeter(self, node):
+        return not self.is_interior(node)
+
+    def is_interior(self, node, search_tree = None):
+        if search_tree is None:
+            search_tree = nx.bfs_tree(self.board, node)
+
+        for tree_node in search_tree.successors(node):
+            owner = self.board.nodes[tree_node]['owner']
+            if owner is None:
+                if not self.is_interior(tree_node, search_tree): return False
+            if owner is not self.player_num:
+                return False
+
+        return True
+
+    def get_perimeter_nodes(self):
+        self.perimeter_nodes = dict() #Reset perimeter
+        for node in self.nodes:
+            if self.is_perimeter(node):
+                self.perimeter_nodes[node] = 0
 
     """
     Called during the placement phase to request player moves
@@ -131,6 +152,9 @@ class Player(BasePlayer):
         Insert player logic here to determine where to place your units
         """
 
+        self.get_perimeter_nodes()
+        print(list(self.perimeter_nodes.keys()))
+
         for target in self.long_term_unit_counts:
             curr_enemy_count = self.get_enemy_units(target)
             prev_enemy_count = self.long_term_unit_counts[target][0]
@@ -138,7 +162,7 @@ class Player(BasePlayer):
 
         for target in copy.copy(self.long_term_protect_targets):
             if (self.board.nodes[target]['owner'] != self.player_num):
-                continue # Oh no, someone took the node before we could protect it 
+                continue # Oh no, someone took the node before we could protect it
 
             if (target in self.long_term_unit_counts):
                 count = self.long_term_unit_counts[target]
@@ -173,7 +197,7 @@ class Player(BasePlayer):
 
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
 
-    
+
 
     def execute_single_turn_actions(self):
         for nodes in self.nodes:
@@ -191,8 +215,8 @@ class Player(BasePlayer):
                     else:
                         self.long_term_attack_targets.add(nodes)    #Maybe I'll get around to it
 
-                    # Protect nodes at risk                
-                    if ((n_owner != None) and (n_owner != self.player_num)):                    
+                    # Protect nodes at risk
+                    if ((n_owner != None) and (n_owner != self.player_num)):
                         if (n_units > self_units/2):
                             self.long_term_protect_targets.add(nodes)
         return
@@ -203,7 +227,7 @@ class Player(BasePlayer):
     # 3. Small viewing window
     def schedule_multi_turn_actions(self):
 
-        
+
         #Calculate all path lengths, even if we don't use it
         length = nx.all_pairs_shortest_path_length(self.board)
         list_len = (dict(length)) #(nodeA, {nodeB:dist, nodeC:dist ...})
@@ -268,7 +292,7 @@ class Player(BasePlayer):
                     units_needed = targets[curr_target_num][1]
 
 
-    def execute_multi_turn_actions(self):        
+    def execute_multi_turn_actions(self):
         for mov_src in copy.copy(self.long_term_movements): #Work on cached copy of requests
             actions = self.long_term_movements.pop(mov_src)
             for act in copy.copy(actions):
@@ -289,7 +313,7 @@ class Player(BasePlayer):
                     else:
                         self.long_term_movements[dst] = list()
                         self.long_term_movements[dst].append(copy.copy(act))
-                
+
 
 
     """
@@ -307,5 +331,5 @@ class Player(BasePlayer):
         #TODO: Consider pruning long_term_*_targets
         #Update: Considered!
 
-        
+
         return self.dict_moves #Returns moves built up over the phase. Do not modify!
